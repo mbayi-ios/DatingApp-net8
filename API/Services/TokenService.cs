@@ -6,9 +6,9 @@ using Microsoft.IdentityModel.Tokens;
 using System.Security.Claims;
 using System.Text;
 
-public class TokenService(IConfiguration config): ITokenService 
+public class TokenService(IConfiguration config, UserManager<AppUser> userManager): ITokenService 
 {
-    public string CreateToken(AppUser user) 
+    public async Task<string> CreateToken(AppUser user) 
     {
         var tokenKey = config["TokenKey"] ?? throw new Exception("Cannot access tokenKey from appsettings");
 
@@ -16,11 +16,17 @@ public class TokenService(IConfiguration config): ITokenService
 
         var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(tokenKey));
 
+        if(user.UserName == null) throw new Exception("No user name for user");
+
         var claims = new List<Claim> 
         {
             new(ClaimTypes.NameIdentifier, user.Id.ToString()),
             new(ClaimTypes.Name, user.UserName)
         };
+
+        var roles = await userManager.GetRolesAsync(user);
+
+        claims.AddRange(roles.Select(role => new Claim(ClaimTypes.Role, role)));
 
         var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha512Signature);
 
