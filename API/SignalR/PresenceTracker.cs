@@ -40,7 +40,7 @@ public class PresenceTracker
     return Task.CompletedTask;
  }
 
- public Task<string[]> GetOlineUsers()
+ public Task<string[]> GetOnlineUsers()
     {
         string[] onlineUsers;
 
